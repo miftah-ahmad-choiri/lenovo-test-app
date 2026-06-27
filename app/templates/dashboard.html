@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lenovo Ticket Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+            font-size: 14px;
+            background: #f7f8fa;
+            color: #1f2328;
+            padding: 24px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .page-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .badge {
+            background: #3b82d4;
+            color: #fff;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+
+        .nav-links {
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .nav-links a {
+            color: #3b82d4;
+            text-decoration: none;
+            margin-right: 16px;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .filter-bar {
+            margin-bottom: 14px;
+        }
+
+        .filter-bar input {
+            width: 280px;
+            padding: 6px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .filter-bar input:focus {
+            border-color: #3b82d4;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 900px;
+        }
+
+        thead th {
+            background: #f7f8fa;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 9px 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            color: #57606a;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #f0f6ff;
+        }
+
+        tbody td {
+            padding: 8px 12px;
+            vertical-align: top;
+            line-height: 1.5;
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Status badges */
+        .status-closed {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .status-need {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #57606a;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="nav-links">
+        <a href="/">&#8592; Home</a>
+        <a href="/upload-page">Upload Page</a>
+    </div>
+
+    <div class="page-header">
+        <h1>Lenovo Ticket Dashboard</h1>
+        <span class="badge">{{ total }} records</span>
+    </div>
+
+    <div class="filter-bar">
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search any column..."
+            onkeyup="filterTable()"
+        >
+    </div>
+
+    <div class="table-wrapper">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                    <th title="{{ header }}">{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row %}
+                    {% if loop.index0 == headers.index("Status") %}
+                        {% if "Closed" in cell|string %}
+                        <td><span class="status-closed">{{ cell }}</span></td>
+                        {% elif "Need" in cell|string %}
+                        <td><span class="status-need">{{ cell }}</span></td>
+                        {% else %}
+                        <td>{{ cell }}</td>
+                        {% endif %}
+                    {% else %}
+                    <td title="{{ cell }}">{{ cell }}</td>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">IBM TLS Lenovo</div>
+
+    <script>
+    function filterTable() {
+        var input = document.getElementById("searchInput").value.toLowerCase();
+        var rows = document.querySelectorAll("#dataTable tbody tr");
+        rows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? "" : "none";
+        });
+    }
+    </script>
+
+</body>
+</html>
