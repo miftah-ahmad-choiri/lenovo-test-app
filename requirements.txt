@@ -1,1 +1,5 @@
+flask
+flask-cors
+pandas
 openpyxl
+gunicorn
