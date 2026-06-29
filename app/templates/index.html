@@ -29,7 +29,7 @@
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 40px 48px;
-            max-width: 520px;
+            max-width: 560px;
             width: 100%;
         }
 
@@ -69,6 +69,7 @@
             margin-bottom: 28px;
         }
 
+        /* ── Drop zone ── */
         .drop-zone {
             border: 2px dashed #e5e7eb;
             border-radius: 6px;
@@ -112,22 +113,54 @@
             color: #57606a;
         }
 
-        .file-list {
-            font-size: 13px;
-            color: #57606a;
+        /* ── File status list ── */
+        .file-status-list {
             margin-bottom: 16px;
-            min-height: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .file-list span {
-            display: inline-block;
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             background: #f7f8fa;
             border: 1px solid #e5e7eb;
-            border-radius: 4px;
-            padding: 2px 8px;
-            margin: 2px 4px 2px 0;
+            border-radius: 6px;
+            padding: 9px 14px;
+            font-size: 13px;
         }
 
+        .file-row-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .file-row-detail {
+            font-size: 12px;
+            color: #57606a;
+            white-space: nowrap;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        .badge-pending  { background: #f3f4f6; color: #57606a; }
+        .badge-uploading { background: #dbeafe; color: #1d4ed8; }
+        .badge-success  { background: #d1fae5; color: #065f46; }
+        .badge-error    { background: #fee2e2; color: #991b1b; }
+        .badge-skipped  { background: #fef3c7; color: #92400e; }
+
+        /* ── Upload button ── */
         .btn-upload {
             display: block;
             width: 100%;
@@ -142,31 +175,47 @@
             transition: opacity 0.15s;
         }
 
-        .btn-upload:hover {
-            opacity: 0.85;
-        }
+        .btn-upload:hover   { opacity: 0.85; }
+        .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-upload:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .result-box {
-            margin-top: 20px;
-            background: #f7f8fa;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 14px 16px;
-            font-size: 13px;
-            font-family: "Cascadia Code", "Consolas", monospace;
-            white-space: pre-wrap;
-            word-break: break-all;
-            color: #1f2328;
+        /* ── Summary banner ── */
+        .summary-banner {
             display: none;
+            margin-top: 20px;
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid;
         }
 
-        .result-box.visible {
+        .summary-banner.success {
             display: block;
+            background: #d1fae5;
+            border-color: #6ee7b7;
+            color: #065f46;
+        }
+
+        .summary-banner.partial {
+            display: block;
+            background: #fef3c7;
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        .summary-banner.error {
+            display: block;
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        .summary-detail {
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 400;
+            color: inherit;
+            opacity: 0.85;
         }
 
         .footer {
@@ -188,7 +237,7 @@
 
         <div class="logo">Lenovo Service Portal</div>
         <h1>Upload Files</h1>
-        <p class="subtitle">Select Excel files and images to upload for ticket processing.</p>
+        <p class="subtitle">Select Excel files and images — they will be uploaded to your Flask server and pushed to Box automatically.</p>
 
         <div class="drop-zone" id="dropZone">
             <input type="file" id="files" multiple accept=".xlsx,.xls,.csv,.png,.jpg,.jpeg">
@@ -197,84 +246,168 @@
             <div class="drop-zone-hint">Supports .xlsx, .xls, .csv, .png, .jpg</div>
         </div>
 
-        <div class="file-list" id="fileList"></div>
+        <!-- Per-file status rows injected here by JS -->
+        <div class="file-status-list" id="fileStatusList"></div>
 
         <button class="btn-upload" id="uploadBtn" onclick="uploadFiles()" disabled>
-            Upload
+            Upload &amp; Send to Box
         </button>
 
-        <pre class="result-box" id="result"></pre>
+        <!-- Summary banner shown after upload completes -->
+        <div class="summary-banner" id="summaryBanner">
+            <div id="summaryTitle"></div>
+            <div class="summary-detail" id="summaryDetail"></div>
+        </div>
 
     </div>
 
     <div class="footer">IBM TLS Lenovo</div>
 
     <script>
-        const filesInput  = document.getElementById("files");
-        const fileList    = document.getElementById("fileList");
-        const uploadBtn   = document.getElementById("uploadBtn");
-        const dropZone    = document.getElementById("dropZone");
-        const resultBox   = document.getElementById("result");
+        const filesInput     = document.getElementById("files");
+        const fileStatusList = document.getElementById("fileStatusList");
+        const uploadBtn      = document.getElementById("uploadBtn");
+        const dropZone       = document.getElementById("dropZone");
+        const summaryBanner  = document.getElementById("summaryBanner");
+        const summaryTitle   = document.getElementById("summaryTitle");
+        const summaryDetail  = document.getElementById("summaryDetail");
 
-        filesInput.addEventListener("change", updateFileList);
+        let selectedFiles = [];
 
-        dropZone.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            dropZone.classList.add("dragover");
+        // ── File selection ──────────────────────────────────────────
+        filesInput.addEventListener("change", () => {
+            selectedFiles = Array.from(filesInput.files);
+            renderFileRows();
         });
 
-        dropZone.addEventListener("dragleave", () => {
-            dropZone.classList.remove("dragover");
-        });
-
+        dropZone.addEventListener("dragover",  (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+        dropZone.addEventListener("dragleave", ()  => { dropZone.classList.remove("dragover"); });
         dropZone.addEventListener("drop", (e) => {
             e.preventDefault();
             dropZone.classList.remove("dragover");
-            filesInput.files = e.dataTransfer.files;
-            updateFileList();
+            filesInput.files  = e.dataTransfer.files;
+            selectedFiles     = Array.from(filesInput.files);
+            renderFileRows();
         });
 
-        function updateFileList() {
-            const files = filesInput.files;
-            fileList.innerHTML = "";
-            if (files.length === 0) {
+        function renderFileRows() {
+            fileStatusList.innerHTML = "";
+            summaryBanner.className  = "summary-banner";
+
+            if (selectedFiles.length === 0) {
                 uploadBtn.disabled = true;
                 return;
             }
-            for (let f of files) {
-                const tag = document.createElement("span");
-                tag.textContent = f.name;
-                fileList.appendChild(tag);
-            }
+
+            selectedFiles.forEach((f, i) => {
+                const row = document.createElement("div");
+                row.className  = "file-row";
+                row.id         = `row-${i}`;
+                row.innerHTML  = `
+                    <span class="file-row-name" title="${f.name}">${f.name}</span>
+                    <span class="file-row-detail">${formatBytes(f.size)}</span>
+                    <span class="badge badge-pending" id="badge-${i}">Pending</span>
+                `;
+                fileStatusList.appendChild(row);
+            });
+
             uploadBtn.disabled = false;
         }
 
+        // ── Upload ──────────────────────────────────────────────────
         async function uploadFiles() {
-            const files = filesInput.files;
-            if (!files.length) return;
+            if (!selectedFiles.length) return;
 
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = "Uploading...";
-            resultBox.classList.remove("visible");
+            uploadBtn.disabled      = true;
+            uploadBtn.textContent   = "Uploading...";
+            summaryBanner.className = "summary-banner";
+
+            // Mark every row as "Uploading"
+            selectedFiles.forEach((_, i) => setBadge(i, "uploading", "Uploading..."));
 
             const formData = new FormData();
-            for (let file of files) {
-                formData.append("files", file);
+            selectedFiles.forEach(f => formData.append("files", f));
+
+            let result;
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    headers: { "ngrok-skip-browser-warning": "69420" },
+                    body: formData
+                });
+                result = await response.json();
+            } catch (err) {
+                // Network-level failure — mark everything as error
+                selectedFiles.forEach((_, i) => setBadge(i, "error", "Network error"));
+                showBanner("error", "Upload failed", err.message);
+                uploadBtn.textContent = "Upload & Send to Box";
+                uploadBtn.disabled    = false;
+                return;
             }
 
-            const response = await fetch("/upload", {
-                method: "POST",
-                headers: { "ngrok-skip-browser-warning": "69420" },
-                body: formData
+            // Map server results back to the file rows by index
+            const results = result.results || [];
+            let nSuccess = 0, nError = 0, nSkipped = 0;
+
+            results.forEach((r, i) => {
+                if (r.status === "success") {
+                    setBadge(i, "success", "Sent to Box");
+                    setDetail(i, `Box ID: ${r.box_file_id}`);
+                    nSuccess++;
+                } else if (r.status === "error") {
+                    setBadge(i, "error", "Failed");
+                    setDetail(i, r.message);
+                    nError++;
+                } else {
+                    setBadge(i, "skipped", "Skipped");
+                    setDetail(i, r.message);
+                    nSkipped++;
+                }
             });
 
-            const result = await response.json();
+            // Summary banner
+            if (nError === 0 && nSkipped === 0) {
+                showBanner("success", `All ${nSuccess} file(s) uploaded to Box successfully.`, "Local copies have been removed from the server.");
+            } else if (nSuccess > 0) {
+                showBanner("partial", `${nSuccess} succeeded, ${nError} failed, ${nSkipped} skipped.`, "Check individual rows for error details.");
+            } else {
+                showBanner("error", "Upload completed with errors.", "No files were sent to Box.");
+            }
 
-            resultBox.textContent = JSON.stringify(result, null, 2);
-            resultBox.classList.add("visible");
+            uploadBtn.textContent = "Upload & Send to Box";
+            uploadBtn.disabled    = false;
+        }
 
-            uploadBtn.textContent = "Upload";
-            uploadBtn.disabled = false;
+        // ── Helpers ─────────────────────────────────────────────────
+        function setBadge(i, type, text) {
+            const badge = document.getElementById(`badge-${i}`);
+            if (!badge) return;
+            badge.className   = `badge badge-${type}`;
+            badge.textContent = text;
+        }
+
+        function setDetail(i, text) {
+            const row = document.getElementById(`row-${i}`);
+            if (!row) return;
+            let detail = row.querySelector(".file-row-box-detail");
+            if (!detail) {
+                detail = document.createElement("span");
+                detail.className = "file-row-box-detail file-row-detail";
+                row.appendChild(detail);
+            }
+            detail.textContent = text;
+        }
+
+        function showBanner(type, title, detail) {
+            summaryBanner.className = `summary-banner ${type}`;
+            summaryTitle.textContent  = title;
+            summaryDetail.textContent = detail;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes < 1024)        return bytes + " B";
+            if (bytes < 1048576)     return (bytes / 1024).toFixed(1) + " KB";
+            return (bytes / 1048576).toFixed(1) + " MB";
         }
     </script>
 

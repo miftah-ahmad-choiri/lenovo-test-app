@@ -9,6 +9,10 @@ from app.services.excel_service import (
     read_excel_info
 )
 
+from app.services.box_service import (
+    upload_file_to_box
+)
+
 
 def process_uploaded_files(
     uploaded_files
@@ -57,7 +61,11 @@ def process_uploaded_files(
             })
 
             results.append(
-                f"Excel saved: {filename}"
+                _upload_to_box_and_build_result(
+                    dst,
+                    filename,
+                    "Excel"
+                )
             )
 
         # Image
@@ -79,14 +87,20 @@ def process_uploaded_files(
             file.save(dst)
 
             results.append(
-                f"Image saved: {filename}"
+                _upload_to_box_and_build_result(
+                    dst,
+                    filename,
+                    "Image"
+                )
             )
 
         else:
 
-            results.append(
-                f"Unsupported: {filename}"
-            )
+            results.append({
+                "file": filename,
+                "status": "skipped",
+                "message": f"Unsupported file type: {filename}"
+            })
 
     return {
         "status":
@@ -98,3 +112,35 @@ def process_uploaded_files(
         "excel_info":
             excel_info
     }
+
+
+def _upload_to_box_and_build_result(
+    local_path,
+    filename,
+    file_type
+):
+    """Save locally, push to Box, delete local copy, return result dict."""
+    try:
+
+        box_info = upload_file_to_box(
+            local_path,
+            filename
+        )
+
+        return {
+            "file": filename,
+            "type": file_type,
+            "status": "success",
+            "message": f"{file_type} uploaded to Box and removed locally",
+            "box_file_id": box_info["box_file_id"],
+            "box_file_name": box_info["box_file_name"],
+        }
+
+    except Exception as e:
+
+        return {
+            "file": filename,
+            "type": file_type,
+            "status": "error",
+            "message": str(e),
+        }
