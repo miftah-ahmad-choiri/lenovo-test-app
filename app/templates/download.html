@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download from Box — Lenovo Ticket Portal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+            font-size: 14px;
+            background: #f7f8fa;
+            color: #1f2328;
+            padding: 24px;
+        }
+
+        /* ── Nav ── */
+        .nav-links {
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .nav-links a {
+            color: #3b82d4;
+            text-decoration: none;
+            margin-right: 16px;
+        }
+
+        .nav-links a:hover { text-decoration: underline; }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .page-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        /* ── Form card ── */
+        .form-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px 28px;
+            max-width: 680px;
+            margin-bottom: 24px;
+        }
+
+        .form-card h2 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2328;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 540px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #57606a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .form-group input {
+            padding: 8px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            border-color: #3b82d4;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 20px;
+            background: #3b82d4;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .btn-download:hover    { opacity: 0.85; }
+        .btn-download:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Status banners ── */
+        .banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid;
+            margin-bottom: 20px;
+        }
+
+        .banner-success {
+            background: #d1fae5;
+            border-color: #6ee7b7;
+            color: #065f46;
+        }
+
+        .banner-error {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        .banner-icon { font-size: 16px; line-height: 1.4; }
+        .banner-body { flex: 1; line-height: 1.6; }
+        .banner-body strong { display: block; margin-bottom: 2px; }
+
+        /* ── Table section ── */
+        .table-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .table-section-header h2 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .record-badge {
+            background: #3b82d4;
+            color: #fff;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .filter-bar {
+            margin-bottom: 12px;
+        }
+
+        .filter-bar input {
+            width: 280px;
+            padding: 6px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .filter-bar input:focus { border-color: #3b82d4; }
+
+        .table-wrapper {
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 900px;
+        }
+
+        thead th {
+            background: #f7f8fa;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 9px 12px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            color: #57606a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover      { background: #f0f6ff; }
+
+        tbody td {
+            padding: 8px 12px;
+            vertical-align: top;
+            line-height: 1.5;
+            max-width: 220px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-closed {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .status-need {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        /* ── Spinner ── */
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #57606a;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="nav-links">
+        <a href="/">&#8592; Home</a>
+        <a href="/upload-page">Upload Page</a>
+        <a href="/dashboard">Dashboard</a>
+    </div>
+
+    <div class="page-header">
+        <h1>Download from Box</h1>
+    </div>
+
+    <!-- ── Download Form ── -->
+    <div class="form-card">
+        <h2>Box File Configuration</h2>
+        <form method="POST" action="/download-from-box" onsubmit="startLoading()">
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Box Folder Path</label>
+                    <input
+                        type="text"
+                        name="folder_path"
+                        value="{{ default_folder_path }}"
+                        placeholder="/Folder/SubFolder/Download"
+                        required
+                    >
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>Excel File Name</label>
+                    <input
+                        type="text"
+                        name="file_name"
+                        value="{{ default_file_name }}"
+                        placeholder="filename.xlsx"
+                        required
+                    >
+                </div>
+            </div>
+            <button class="btn-download" type="submit" id="downloadBtn">
+                <span id="btnText">Download &amp; Preview</span>
+                <span class="spinner" id="spinner"></span>
+            </button>
+        </form>
+    </div>
+
+    <!-- ── Result Banners ── -->
+    {% if error %}
+    <div class="banner banner-error">
+        <span class="banner-icon">&#10007;</span>
+        <div class="banner-body">
+            <strong>Download failed</strong>
+            {{ error }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if file_name and not error %}
+    <div class="banner banner-success">
+        <span class="banner-icon">&#10003;</span>
+        <div class="banner-body">
+            <strong>Downloaded successfully</strong>
+            {{ file_name }} &mdash; {{ total }} record{{ 's' if total != 1 else '' }} loaded from Box and saved to the downloads directory.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Excel Table ── -->
+    {% if headers %}
+    <div class="table-section-header">
+        <h2>{{ file_name }}</h2>
+        <span class="record-badge">{{ total }} records</span>
+    </div>
+
+    <div class="filter-bar">
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search any column..."
+            onkeyup="filterTable()"
+        >
+    </div>
+
+    <div class="table-wrapper">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                    <th title="{{ header }}">{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    {% for cell in row %}
+                    {% if loop.index0 == headers.index("Status") %}
+                        {% if "Closed" in cell|string %}
+                        <td><span class="status-closed">{{ cell }}</span></td>
+                        {% elif "Need" in cell|string %}
+                        <td><span class="status-need">{{ cell }}</span></td>
+                        {% else %}
+                        <td>{{ cell }}</td>
+                        {% endif %}
+                    {% else %}
+                    <td title="{{ cell }}">{{ cell }}</td>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="footer">IBM TLS Lenovo</div>
+
+    <script>
+        function filterTable() {
+            var input = document.getElementById("searchInput").value.toLowerCase();
+            document.querySelectorAll("#dataTable tbody tr").forEach(function(row) {
+                row.style.display = row.textContent.toLowerCase().includes(input) ? "" : "none";
+            });
+        }
+
+        function startLoading() {
+            var btn     = document.getElementById("downloadBtn");
+            var text    = document.getElementById("btnText");
+            var spinner = document.getElementById("spinner");
+            btn.disabled        = true;
+            text.textContent    = "Downloading...";
+            spinner.style.display = "inline-block";
+        }
+    </script>
+
+</body>
+</html>

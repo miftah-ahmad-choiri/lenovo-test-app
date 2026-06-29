@@ -9,14 +9,11 @@ from box_sdk_gen import (
 )
 from box_sdk_gen.box.errors import BoxAPIError
 
-# Developer token — rotate this when it expires (60 min TTL)
-BOX_TOKEN = "z8Yv9pwluewzBADWyDhgTHPFmHox6XHL"
-
-# Root folder id "0" = All Files; change to a sub-folder id if needed
-BOX_ROOT_FOLDER_ID = "0"
-
-# Name of the destination folder inside Box
-BOX_FOLDER_NAME = "Lenovo Ticket Upload"
+from app.config.settings import (
+    BOX_TOKEN,
+    BOX_UPLOAD_ROOT_FOLDER_ID,
+    BOX_UPLOAD_FOLDER_NAME,
+)
 
 
 def _get_client():
@@ -46,7 +43,7 @@ def upload_file_to_box(local_path: str, filename: str) -> dict:
     Upload a local file to Box, then delete it from the local filesystem.
 
     Returns a dict with keys:
-        box_file_id  — Box file id of the uploaded file
+        box_file_id   — Box file id of the uploaded file
         box_file_name — name as stored in Box
         deleted_local — True if the local file was removed
     """
@@ -54,8 +51,8 @@ def upload_file_to_box(local_path: str, filename: str) -> dict:
 
     folder = _get_or_create_folder(
         client,
-        BOX_FOLDER_NAME,
-        BOX_ROOT_FOLDER_ID,
+        BOX_UPLOAD_FOLDER_NAME,
+        BOX_UPLOAD_ROOT_FOLDER_ID,
     )
 
     with open(local_path, "rb") as f:
@@ -66,6 +63,9 @@ def upload_file_to_box(local_path: str, filename: str) -> dict:
             ),
             file=f,
         )
+
+    if not uploaded.entries:
+        raise Exception("Box upload returned no entries")
 
     box_file = uploaded.entries[0]
 
