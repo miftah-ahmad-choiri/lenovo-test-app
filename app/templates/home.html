@@ -100,12 +100,13 @@
     <div class="card">
         <div class="logo">Lenovo Service Portal</div>
         <h1>Ticket Management</h1>
-        <p>Upload Excel files and images for ticket processing, or view the dashboard to browse existing ticket records.</p>
+        <p>Welcome, <strong>{{ current_user.full_name }}</strong> ({{ current_user.short_username }}). Upload Excel files and images for ticket processing, or view the dashboard to browse existing ticket records.</p>
 
         <div class="btn-group">
             <a class="btn btn-primary" href="/upload-page">Upload Files</a>
             <a class="btn btn-secondary" href="/dashboard">View Dashboard</a>
             <a class="btn btn-secondary" href="/download-page">Download from Box</a>
+            <a class="btn btn-secondary" href="/logout" style="color:#991b1b; border-color:#fca5a5;">Sign out</a>
         </div>
     </div>
 

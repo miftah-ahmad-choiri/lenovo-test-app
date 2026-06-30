@@ -36,7 +36,7 @@ USE_NGROK = False
 # ── Box Configuration ──────────────────────────────────────────────────────
 # Developer token expires every 60 minutes — refresh in the Box Developer Console.
 
-BOX_TOKEN = "iIJDRmfJbFLurXt3z0dY5mEWps3bOrqm"
+BOX_TOKEN = "KscN8szc6NdXPY8cJT8HIcKdJlybyoP6"
 
 # Upload: root folder that receives uploaded files
 BOX_UPLOAD_ROOT_FOLDER_ID = "0"

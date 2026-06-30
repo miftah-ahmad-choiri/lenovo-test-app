@@ -3,6 +3,7 @@ from flask import (
     render_template,
     jsonify
 )
+from flask_login import login_required
 
 home_bp = Blueprint(
     "home",
@@ -11,6 +12,7 @@ home_bp = Blueprint(
 
 
 @home_bp.route("/")
+@login_required
 def home():
 
     return render_template(
