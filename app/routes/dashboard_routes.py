@@ -1,60 +1,35 @@
 import os
 
-import pandas as pd
-
 from flask import (
     Blueprint,
     render_template
 )
+from flask_login import login_required, current_user
+
+from app.config.settings import MASTER_FILE
+from app.services.master_query_service import query_master_by_user
 
 dashboard_bp = Blueprint(
     "dashboard",
     __name__
 )
 
-# Path to the fixed Excel file inside the project
-EXCEL_FILE = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "uploads",
-    "excel",
-    "test-dashboard-file.xlsx"
-)
-
-DATE_COLUMNS = [
-    "Created On",
-    "Order Date",
-    "Courier Pick Up",
-    "Parts ETA Date",
-    "ASP Received Date & Time",
-    "Date & Time WO# Closed",
-]
-
 
 @dashboard_bp.route("/dashboard")
+@login_required
 def dashboard():
 
-    df = pd.read_excel(
-        EXCEL_FILE
+    result = query_master_by_user(
+        excel_path=MASTER_FILE,
+        user_full_name=current_user.full_name
     )
-
-    # Format date columns to readable strings (drop time portion)
-    for col in DATE_COLUMNS:
-        if col in df.columns:
-            df[col] = pd.to_datetime(
-                df[col],
-                errors="coerce"
-            ).dt.strftime("%Y-%m-%d %H:%M")
-
-    # Replace NaT / NaN with empty string so Jinja renders cleanly
-    df = df.fillna("")
-
-    headers = df.columns.tolist()
-    rows = df.values.tolist()
 
     return render_template(
         "dashboard.html",
-        headers=headers,
-        rows=rows,
-        total=len(rows)
+        headers=result["headers"],
+        rows=result["rows"],
+        total=result["total"],
+        all_total=result["all_total"],
+        asp_name=result["asp_name"],
+        error=result.get("error")
     )

@@ -6,13 +6,18 @@ BASE_DIR = os.path.abspath(
     )
 )
 
+DOCUMENTS_DIR = os.path.join(
+    BASE_DIR,
+    "documents"
+)
+
 TEMPLATE_DIR = os.path.join(
     BASE_DIR,
     "templates"
 )
 
 UPLOAD_DIR = os.path.join(
-    BASE_DIR,
+    DOCUMENTS_DIR,
     "uploads"
 )
 
@@ -27,8 +32,16 @@ IMAGE_DIR = os.path.join(
 )
 
 DOWNLOAD_DIR = os.path.join(
-    BASE_DIR,
+    DOCUMENTS_DIR,
     "downloads"
+)
+
+# Master Excel file used by the dashboard
+MASTER_FILE = os.path.join(
+    DOCUMENTS_DIR,
+    "uploads",
+    "excel",
+    "master-file.xlsx"
 )
 
 USE_NGROK = False
